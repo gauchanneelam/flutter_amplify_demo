@@ -15,10 +15,14 @@ class _VerifyUserState extends State<VerifyUser> {
 
   var _confirmationCode = TextEditingController();
   String _errorMsg = "";
+  bool isLoading = false;
 
   _verifyUser(email) async {
     final form = _formKey.currentState;
     if (form!.validate()) {
+      setState(() {
+        isLoading = true;
+      });
       try {
         SignUpResult res = await Amplify.Auth.confirmSignUp(
           username: email,
@@ -26,6 +30,9 @@ class _VerifyUserState extends State<VerifyUser> {
               _confirmationCode.text.replaceAll(new RegExp(r"\s+"), ""),
         );
         if (res.isSignUpComplete) {
+          setState(() {
+            isLoading = false;
+          });
           Navigator.push(
               context,
               MaterialPageRoute(
@@ -35,10 +42,12 @@ class _VerifyUserState extends State<VerifyUser> {
       } on CodeMismatchException catch (e) {
         setState(() {
           _errorMsg = e.message;
+          isLoading = false;
         });
       } on AuthException catch (e) {
         setState(() {
           _errorMsg = e.message;
+          isLoading = false;
         });
       }
     }
@@ -113,9 +122,20 @@ class _VerifyUserState extends State<VerifyUser> {
                     onPressed: () {
                       _verifyUser(email);
                     },
-                    child: Text(
-                      'Submit',
-                      style: TextStyle(color: Colors.white, fontSize: 25),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        Text(
+                          'Submit',
+                          style: TextStyle(color: Colors.white, fontSize: 25),
+                        ),
+                        isLoading
+                            ? CircularProgressIndicator(
+                                backgroundColor: Colors.white,
+                                strokeWidth: 1,
+                              )
+                            : Container()
+                      ],
                     ),
                   ),
                 ),

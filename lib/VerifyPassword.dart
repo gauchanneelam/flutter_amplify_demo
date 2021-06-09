@@ -15,11 +15,15 @@ class _VerifyPasswordState extends State<VerifyPassword> {
   var _confirmationCode = TextEditingController();
   var _newPassword = TextEditingController();
   String _errorMsg = "";
+  bool isLoading = false;
 
   _verifyPassword(email) async {
     final form = _formKey.currentState;
     if (form!.validate()) {
       try {
+        setState(() {
+          isLoading = true;
+        });
         final res = await Amplify.Auth.confirmPassword(
             username: email,
             newPassword: _newPassword.text,
@@ -33,16 +37,19 @@ class _VerifyPasswordState extends State<VerifyPassword> {
       } on CodeMismatchException catch (e) {
         setState(() {
           _errorMsg = "Code is incorrect";
+          isLoading = false;
         });
       } on LimitExceededException catch (e) {
         setState(() {
           _errorMsg = "Attempt limit exceeded, please try after some time";
+          isLoading = false;
         });
         // final snackBar = SnackBar(content: Text('Yay! A SnackBar!'));
         // ScaffoldMessenger.of(context).showSnackBar(snackBar);
       } on AuthException catch (e) {
         setState(() {
           _errorMsg = e.message;
+          isLoading = false;
         });
       }
     }
@@ -131,9 +138,20 @@ class _VerifyPasswordState extends State<VerifyPassword> {
                     onPressed: () {
                       _verifyPassword(email);
                     },
-                    child: Text(
-                      'Submit',
-                      style: TextStyle(color: Colors.white, fontSize: 25),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        Text(
+                          'Submit',
+                          style: TextStyle(color: Colors.white, fontSize: 25),
+                        ),
+                        isLoading
+                            ? CircularProgressIndicator(
+                                backgroundColor: Colors.white,
+                                strokeWidth: 1,
+                              )
+                            : Container()
+                      ],
                     ),
                   ),
                 ),

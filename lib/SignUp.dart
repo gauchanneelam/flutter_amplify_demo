@@ -11,6 +11,7 @@ class SignUp extends StatefulWidget {
 
 class _SignUpState extends State<SignUp> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  bool isLoading = false;
 
   String _errorMsg = "";
   var _email = TextEditingController();
@@ -20,6 +21,9 @@ class _SignUpState extends State<SignUp> {
     final form = _formKey.currentState;
     if (form!.validate()) {
       try {
+        setState(() {
+          isLoading = true;
+        });
         SignUpResult res = await Amplify.Auth.signUp(
           username: _email.text.replaceAll(new RegExp(r"\s+"), ""),
           password: _password.text,
@@ -32,6 +36,9 @@ class _SignUpState extends State<SignUp> {
         if (res.isSignUpComplete) {
           // final snackBar = SnackBar(content: Text('Yay! A SnackBar!'));
           // ScaffoldMessenger.of(context).showSnackBar(snackBar);
+          setState(() {
+            isLoading = false;
+          });
           Navigator.push(
               context,
               MaterialPageRoute(
@@ -42,8 +49,10 @@ class _SignUpState extends State<SignUp> {
               ));
         }
       } on AuthException catch (e) {
+        print(e);
         setState(() {
           _errorMsg = e.message;
+          isLoading = false;
         });
       }
     }
@@ -126,9 +135,24 @@ class _SignUpState extends State<SignUp> {
                     onPressed: () {
                       _registerAccount();
                     },
-                    child: Text(
-                      'Sign Up',
-                      style: TextStyle(color: Colors.white, fontSize: 25),
+                    // child: Text(
+                    //   'Sign Up',
+                    //   style: TextStyle(color: Colors.white, fontSize: 25),
+                    // ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        Text(
+                          'Sign Up',
+                          style: TextStyle(color: Colors.white, fontSize: 25),
+                        ),
+                        isLoading
+                            ? CircularProgressIndicator(
+                                backgroundColor: Colors.white,
+                                strokeWidth: 1,
+                              )
+                            : Container()
+                      ],
                     ),
                   ),
                 ),

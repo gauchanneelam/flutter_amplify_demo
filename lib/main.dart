@@ -26,6 +26,7 @@ class _MyAppState extends State<MyApp> {
 
   var _email = TextEditingController();
   var _password = TextEditingController();
+  bool isLoading = false;
   String _errorMsg = "";
 
   @override
@@ -58,6 +59,9 @@ class _MyAppState extends State<MyApp> {
   void _signInUser() async {
     final form = _formKey.currentState;
     if (form!.validate()) {
+      setState(() {
+        isLoading = true;
+      });
       try {
         SignInResult res = await Amplify.Auth.signIn(
           username: _email.text.replaceAll(new RegExp(r"\s+"), ""),
@@ -66,6 +70,9 @@ class _MyAppState extends State<MyApp> {
         if (res.isSignedIn) {
           // final snackBar = SnackBar(content: Text('Yay! A SnackBar!'));
           // ScaffoldMessenger.of(context).showSnackBar(snackBar);
+          setState(() {
+            isLoading = false;
+          });
           Navigator.push(
               context,
               MaterialPageRoute(
@@ -75,14 +82,17 @@ class _MyAppState extends State<MyApp> {
       } on NotAuthorizedException catch (e) {
         setState(() {
           _errorMsg = "Email or password is incorrect";
+          isLoading = false;
         });
       } on UserNotConfirmedException catch (e) {
         setState(() {
           _errorMsg = "Your account is not verified";
+          isLoading = false;
         });
       } on AuthException catch (e) {
         setState(() {
           _errorMsg = e.message;
+          isLoading = false;
         });
       }
     }
@@ -90,6 +100,10 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
+    var loader = CircularProgressIndicator(
+      backgroundColor: Colors.white,
+      strokeWidth: 1,
+    );
     return MaterialApp(
       home: Scaffold(
         backgroundColor: Colors.white,
@@ -165,18 +179,29 @@ class _MyAppState extends State<MyApp> {
                 Container(
                   height: 50,
                   width: 250,
+                  alignment: Alignment.center,
                   decoration: BoxDecoration(
                       color: Colors.blue,
                       borderRadius: BorderRadius.circular(20)),
                   child: FlatButton(
-                    onPressed: () {
-                      _signInUser();
-                    },
-                    child: Text(
-                      'Login',
-                      style: TextStyle(color: Colors.white, fontSize: 25),
-                    ),
-                  ),
+                      onPressed: () {
+                        _signInUser();
+                      },
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: <Widget>[
+                          Text(
+                            'Login',
+                            style: TextStyle(color: Colors.white, fontSize: 25),
+                          ),
+                          isLoading
+                              ? CircularProgressIndicator(
+                                  backgroundColor: Colors.white,
+                                  strokeWidth: 1,
+                                )
+                              : Container()
+                        ],
+                      )),
                 ),
                 SizedBox(
                   height: 130,

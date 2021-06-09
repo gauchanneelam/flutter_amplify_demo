@@ -15,15 +15,22 @@ class _ResetPasswordState extends State<ResetPassword> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   var _email = TextEditingController();
   String _errorMsg = "";
+  bool isLoading = false;
 
   _resetPassword() async {
     final form = _formKey.currentState;
     if (form!.validate()) {
+      setState(() {
+        isLoading = true;
+      });
       try {
         ResetPasswordResult res = await Amplify.Auth.resetPassword(
           username: _email.text.replaceAll(new RegExp(r"\s+"), ""),
         );
         if (!res.isPasswordReset) {
+          setState(() {
+            isLoading = false;
+          });
           Navigator.push(
               context,
               MaterialPageRoute(
@@ -37,19 +44,23 @@ class _ResetPasswordState extends State<ResetPassword> {
         setState(() {
           _errorMsg =
               "Cannot reset password for the user as there is no registered/verified email";
+          isLoading = false;
         });
       } on InvalidParameterException catch (e) {
         setState(() {
           _errorMsg =
               "Cannot reset password for the user as there is no registered/verified email";
+          isLoading = false;
         });
       } on LimitExceededException catch (e) {
         setState(() {
           _errorMsg = "Attempt limit exceeded, please try after some time";
+          isLoading = false;
         });
       } on AuthException catch (e) {
         setState(() {
           _errorMsg = e.message;
+          isLoading = false;
         });
       }
     }
@@ -120,9 +131,20 @@ class _ResetPasswordState extends State<ResetPassword> {
                     onPressed: () {
                       _resetPassword();
                     },
-                    child: Text(
-                      'Next',
-                      style: TextStyle(color: Colors.white, fontSize: 25),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        Text(
+                          'Next',
+                          style: TextStyle(color: Colors.white, fontSize: 25),
+                        ),
+                        isLoading
+                            ? CircularProgressIndicator(
+                                backgroundColor: Colors.white,
+                                strokeWidth: 1,
+                              )
+                            : Container()
+                      ],
                     ),
                   ),
                 ),
