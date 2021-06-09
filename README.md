@@ -3,4 +3,4 @@
 A new Flutter project.
 
 ## Run aplication
-1.flutter run --no-sound-null-safety
+1.  flutter run --no-sound-null-safety
